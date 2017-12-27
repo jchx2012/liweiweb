@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script>
+        ;
+        (function (win, lib) {
+            var doc = win.document;
+            var docEl = doc.documentElement;
+            var metaEl = doc.querySelector('meta[name="viewport"]');
+            var flexibleEl = doc.querySelector('meta[name="flexible"]');
+            var dpr = 0;
+            var scale = 0;
+            var tid;
+            var flexible = lib.flexible || (lib.flexible = {});
+
+            if (metaEl) {
+                console.warn('将根据已有的meta标签来设置缩放比例');
+                var match = metaEl.getAttribute('content').match(/initial\-scale=([\d\.]+)/);
+                if (match) {
+                    scale = parseFloat(match[1]);
+                    dpr = parseInt(1 / scale);
+                }
+            } else if (flexibleEl) {
+                var content = flexibleEl.getAttribute('content');
+                if (content) {
+                    var initialDpr = content.match(/initial\-dpr=([\d\.]+)/);
+                    var maximumDpr = content.match(/maximum\-dpr=([\d\.]+)/);
+                    if (initialDpr) {
+                        dpr = parseFloat(initialDpr[1]);
+                        scale = parseFloat((1 / dpr).toFixed(2));
+                    }
+                    if (maximumDpr) {
+                        dpr = parseFloat(maximumDpr[1]);
+                        scale = parseFloat((1 / dpr).toFixed(2));
+                    }
+                }
+            }
+
+            if (!dpr && !scale) {
+                var isAndroid = win.navigator.appVersion.match(/android/gi);
+                var isIPhone = win.navigator.appVersion.match(/iphone/gi);
+                var devicePixelRatio = win.devicePixelRatio;
+                //var isRegularDpr = devicePixelRatio.toString().match(/^[1-9]\d*$/g);
+                if (isIPhone) {
+                    // 对于2和3的屏，用2倍的方案，其余的用1倍方案
+                    if (devicePixelRatio >= 3 && (!dpr || dpr >= 3)) {
+                        dpr = 3;
+                    } else if (devicePixelRatio >= 2 && (!dpr || dpr >= 2)) {
+                        dpr = 2;
+                    } else {
+                        dpr = 1;
+                    }
+                } else {
+                    // 其他设备下，仍旧使用1倍的方案
+                    dpr = 1;
+                }
+                scale = 1 / dpr;
+            }
+
+            docEl.setAttribute('data-dpr', dpr);
+            if (!metaEl) {
+                metaEl = doc.createElement('meta');
+                metaEl.setAttribute('name', 'viewport');
+                //Android target-densitydpi=device-dpi
+                var attribute = 'initial-scale=' + scale + ', maximum-scale=' + scale + ', minimum-scale=' + scale +
+                    ', user-scalable=no';
+                //判断是否是WebView
+                var app = getCookie('chelun_appName');
+                if (app) {
+                    attribute = 'width=device-width,' + attribute;
+                }
+                metaEl.setAttribute('content', attribute);
+                if (docEl.firstElementChild) {
+                    docEl.firstElementChild.appendChild(metaEl);
+                } else {
+                    var wrap = doc.createElement('div');
+                    wrap.appendChild(metaEl);
+                    doc.write(wrap.innerHTML);
+                }
+            }
+
+            function getCookie(name) {
+                var maps = {};
+                var cookArr = document.cookie.split(';')
+                for (var i in cookArr) {
+                    var tmp = cookArr[i].replace(/^\s*/, '');
+                    if (tmp) {
+                        var nv = tmp.split('=');
+                        maps[nv[0]] = nv[1] || '';
+                    }
+                }
+                return maps[name];
+            }
+
+            function refreshRem() {
+                var width = docEl.getBoundingClientRect().width;
+                if (width / dpr > 540) {
+                    width = 540 * dpr;
+                }
+                var rem = width / 10;
+                docEl.style.fontSize = rem + 'px';
+                flexible.rem = win.rem = rem;
+            }
+
+            win.addEventListener('resize', function () {
+                clearTimeout(tid);
+                tid = setTimeout(refreshRem, 300);
+            }, false);
+            win.addEventListener('pageshow', function (e) {
+                if (e.persisted) {
+                    clearTimeout(tid);
+                    tid = setTimeout(refreshRem, 300);
+                }
+            }, false);
+
+            if (doc.readyState === 'complete') {
+                //doc.body.style.fontSize = 12 * dpr + 'px';
+            } else {
+                doc.addEventListener('DOMContentLoaded', function (e) {
+                    //doc.body.style.fontSize = 12 * dpr + 'px';
+                }, false);
+            }
+
+            refreshRem();
+
+            flexible.dpr = win.dpr = dpr;
+            flexible.refreshRem = refreshRem;
+            flexible.rem2px = function (d) {
+                var val = parseFloat(d) * this.rem;
+                if (typeof d === 'string' && d.match(/rem$/)) {
+                    val += 'px';
+                }
+                return val;
+            }
+            flexible.px2rem = function (d) {
+                var val = parseFloat(d) / this.rem;
+                if (typeof d === 'string' && d.match(/px$/)) {
+                    val += 'rem';
+                }
+                return val;
+            }
+
+        })(window, window['lib'] || (window['lib'] = {}));
+    </script>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta content="telephone=no,email=no" name="format-detection">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-touch-fullscreen" content="yes">
+    <meta itemprop="name" content="移动页面" />
+    <meta name="description" itemprop="description" content="移动页面" />
+    <title>移动页面</title>
+    <link rel="stylesheet" href="http://oss2.yicheku.com.cn/res/temp_v2/css/reset.css">
+    <style>
+        .wrap {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            max-width: 10rem;
+            margin: 0 auto;
+        }
+
+        /* #### 头部S #### */
+
+        .header {
+            width: 100%;
+            height: 6.04rem;
+            margin-top: 0.5rem;
+        }
+        .header img{
+            object-fit: cover;
+            -webkit-object-fit:cover;
+        }
+        /* #### 头部E #### */
+        .title{
+            width: 8.6rem;
+            margin: 0 auto;
+            height: 2rem;
+            position: fixed;
+            top:calc(50% - 1rem);
+            left:calc(50% - 4.3rem);
+            text-align: center;
+        }
+        .title p{
+            line-height: 0.75rem; 
+            font-size:14px;
+            padding:0 1.5rem;
+            color: #00a67c;
+        }
+       [data-dpr="2"] .title p{
+            font-size:28px;
+       }
+       [data-dpr="3"] .title p{
+            font-size:42px;
+       }
+     
+    </style>
+</head>
+
+<body >
+    <div class="wrap" id="container">
+      
+        <div class="header">
+                <img src="image/2018.png" alt="">
+        </div>
+        
+        <div class="title">
+            <p>亲,^_^真不好意思^_^移动端不能访问哦,请用电脑访问我的简历吧地址:www.lwhost.top</p>  
+        </div>
+
+    </div>
+</body>
+
+
+</html>
