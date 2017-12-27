@@ -298,5 +298,15 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fullPage.js/2.8.2/vendors/jquery.easings.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/move.js/0.3.3/move.js"></script>
 <script src="js/index.js"></script>
+<script>
+    // 含义就是如果是移动端打开的话那就跳转到 "移动页面" ，如果不是就跳转到"pc页面"
+    if(/Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent)) {
+        window.location.href = "yd.html";   //移动端
+    } else {
+        window.location.href = "index.html";   //pc端
+    }
+
+
+</script>
 </body>
 </html>
